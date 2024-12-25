@@ -22,7 +22,7 @@ function varargout = bird(varargin)
 
 % Edit the above text to modify the response to help bird
 
-% Last Modified by GUIDE v2.5 25-Dec-2024 03:01:50
+% Last Modified by GUIDE v2.5 25-Dec-2024 18:49:34
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -801,3 +801,40 @@ for y = 2:height-1
         lbp_image(y, x) = lbp_value;
     end
 end
+
+
+% --- Executes on button press in pushbutton_classifyBird.
+function pushbutton_classifyBird_Callback(hObject, eventdata, handles)
+    % 检查是否加载了图像
+    if ~isfield(handles, 'img') || isempty(handles.img)
+        msgbox('请先加载图像！', '错误', 'error');
+        return;
+    end
+
+    % 保存加载的图像到临时文件
+    temp_image_path = 'temp_uploaded_image.jpg';
+    imwrite(handles.img, temp_image_path);
+
+    try
+        % 确保 Python 环境和路径正确
+        % 添加 Python 脚本的路径
+        addpath('D:\BirdTest\ultralytics-main\ultralytics-main');  % 修改为脚本所在目录的路径
+
+        % 调用 Python 函数进行预测
+        result = py.predict.predict_bird(temp_image_path);
+        
+        % 提取结果
+        class_name = char(result{1});  % 分类结果
+        confidence = double(result{2});  % 置信度
+
+        % 显示分类结果
+        msgbox(sprintf('预测结果: %s\n置信度: %.2f%%', class_name, confidence * 100), '分类结果');
+    catch ME
+        % 捕获错误并显示
+        msgbox(['Python 调用失败: ', ME.message], '错误', 'error');
+    end
+
+    % 清理临时文件
+    if exist(temp_image_path, 'file')
+        delete(temp_image_path);
+    end
